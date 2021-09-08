@@ -1,6 +1,7 @@
 let addToy = false;
 
 document.addEventListener("DOMContentLoaded", () => {
+  getToys()
   const addBtn = document.querySelector("#new-toy-btn");
   const toyFormContainer = document.querySelector(".container");
   addBtn.addEventListener("click", () => {
@@ -12,113 +13,112 @@ document.addEventListener("DOMContentLoaded", () => {
       toyFormContainer.style.display = "none";
     }
   });
-});
-
-
-
-const toyContainer = document.getElementById("toy-collection");
-
-
-const renderIndividualToy = toy => {
-function renderIndividualToy(toy){
-
-  let likeValue = `${toy.likes}`;
-
-const renderIndividualToy = toy => {
-
-
-const renderToys = toysArray => {
-function renderToys(toysArray){
-
-  toyContainer.innerHTML = ``;
-
-  toysArray.forEach(toy => {
-  toysArray.forEach(function(toy){
-
-    renderIndividualToy(toy);
+  toyFormContainer.addEventListener('submit', (e) => {
+    e.preventDefault();
+    postToy(e.target.name.value, e.target.image.value)
   })
-})
-
-
-const fetchToys = () => {
-function fetchToys(){
-  fetch(toysEndpoint)
-    .then(resp => resp.json())
-    .then(toysArray => {
-    .then(function(resp){
-      return resp.json()
-    })
-    .then(function(toysArray){
- 
-      renderToys(toysArray);
-    })
-    .catch(err => {
-    .catch(function(err){
-  
-      console.log(err);
-const fetchToys = () => {
-
-
-const handlePostToy = e => {
-function handlePostToy(e){
- 
-  e.preventDefault();
-const handlePostToy = e => {
-
-  fetch(toysEndpoint, reqObj)
-    .then(resp => resp.json())
-    .then(individualToy => {
-    .then(function(resp){
-      return resp.json();
-    })
-    .then(function(individualToy){
-      renderIndividualToy(individualToy);
-    })
-    .catch(err => console.log(err))
-    .catch(function(err){
-      console.log(err);
-    })
-}
-
-const handleLikeButton = e => {
-function handleLikeButton(e){
-  // create a variable to store the toys ID
-  // we have access to the toy's ID from the card's attribute of data-id
-  const toyId = e.target.parentElement.dataset.id;
-const handleLikeButton = e => {
-  // note that a patch request needs to go to "toys/:id"
-  // we have access to the toy's ID to append to the URL
-  fetch(toysEndpoint + `/${toyId}`, reqObj)
-    .then(resp => resp.json())
-    .then(data => {
-    .then(function(resp){
-      return resp.json();
-    })
-    .then(function(data){
-      console.log(data);
-      // invoke the fetchToys function to rerender all the toys
-      fetchToys();
-    })
-    .catch(err => console.log(err))
-    .catch(function(err){
-      console.log(err);
-    })
-
-}
-fetchToys();
-
-addBtn.addEventListener("click", () => {
-addBtn.addEventListener("click", function(){
- 
-  addToy = !addToy;
-toyForm.addEventListener("submit", handlePostToy);
-
-
-document.addEventListener("click", (e) => {
-document.addEventListener("click", function(e){
-
-  if (e.target.className === "like-btn") {
+    // button.addEventListener('click', (e) => console.log(e.target.id))
+  })
+//   const handleLikeButton = e => {
+//     function handleLikeButton(e){
+//       const toyId = e.target.parentElement.dataset.id;
+// const handleLikeButton = e => {
+//       fetch(toysEndpoint + `/${toyId}`, reqObj)
+//         .then(resp => resp.json())
+//         .then(function(data){
+//           console.log(data);
+//           fetchToys();
+//         })
+//         .catch(err => console.log(err))
+//         .catch(function(err){
+//           console.log(err);
+//         })
     
-    handleLikeButton(e);
-  }
-});
+//     }
+    
+    
+
+    // document.addEventListener("click", function(e){
+    //   if (e.target.className === "like-btn") {
+    //     handleLikeButton(e);
+    //   }
+    // });
+
+function getToys() {
+  fetch('http://localhost:3000/toys')
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      data.map(t => renderToy(t))
+      console.log('getToys', data)
+      const likeBtns = [...document.querySelectorAll('.like-btn')];
+      likeBtns.map(button => {
+        button.addEventListener('click', (e) => {
+          const id = e.target.id;
+          const likes = e.target.getAttribute('data');
+          patchToy(id, parseInt(likes) + 1);
+        })
+      })
+    })
+}
+
+function renderToy(toy) {
+  const toyCard = `<div class="card">
+<h2>${toy.name}</h2>
+<img src=${toy.image} class="toy-avatar" />
+<p><span id="likes">${toy.likes}</span> Likes</p>
+<button class="like-btn" data=${toy.likes} id="${toy.id}">Like <3</button>
+</div>`
+
+  const toyBox = document.getElementById('toy-collection');
+  toyBox.innerHTML += toyCard;
+
+}
+
+function postToy(name, url) {
+
+  fetch('http://localhost:3000/toys', {
+    method: 'POST',
+    headers:
+    {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify({
+      "name": name,
+      "image": url,
+      "likes": 0
+    })
+  })
+    .then(function (resp) {
+      return resp.json();
+    })
+    .then(function (data) {
+      console.log('postToy', data)
+    })
+
+}
+
+function patchToy(id, likes) {
+
+  fetch(`http://localhost:3000/toys/${id}`, {
+    method: 'PATCH',
+    headers:
+    {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify({
+      "likes": likes
+    })
+  })
+    .then(function (resp) {
+      return resp.json();
+    })
+    .then(function (data) {
+      console.log('patchToy', data)
+    })
+
+}
+
